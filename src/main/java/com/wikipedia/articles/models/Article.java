@@ -17,7 +17,7 @@ public class Article {
 
     private String comments;
 
-    private Integer grade; // 1 to 5
+    private Integer grade;
 
     public Article() {}
 
@@ -28,7 +28,6 @@ public class Article {
         this.grade = grade;
     }
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
