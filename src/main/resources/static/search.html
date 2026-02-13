@@ -2,9 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Search</title>
+    <title>Wikipedia Search</title>
+    <link rel="stylesheet" href="/css/search.css">
+    <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-<h1>You can search your article here ✨</h1>
+
+<h1>Your Wikipedia Search Hub 🔍</h1>
+
+<div class="search-container">
+    <input type="text" id="searchInput" placeholder="Type keywords to search..." aria-label="Search Wikipedia">
+    <button id="searchButton">Search</button>
+</div>
+
+<div class="results" id="results"></div>
+<div class="pagination" id="pagination"></div>
+
+<template id="articleTemplate">
+    <div class="article">
+        <div class="article-info">
+            <h3 class="article-title">
+                <a href="#" target="_blank"></a> 🔗
+            </h3>
+            <p class="article-snippet"></p>
+            <div class="article-extra">
+                <p><strong>Comments:</strong> <span class="article-comments"></span></p>
+                <p><strong>Grade:</strong> <span class="article-grade"></span></p>
+                <p><strong>Category:</strong> <span class="article-category"></span></p>
+            </div>
+        </div>
+        <button class="article-action-button" disabled>Save</button>
+    </div>
+</template>
+
+<script src="/js/search.js"></script>
 </body>
 </html>
