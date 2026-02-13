@@ -177,3 +177,127 @@ button#searchButton:hover {
         transform: rotate(360deg);
     }
 }
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: #ffffff;
+    width: 420px;
+    max-width: 90%;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.modal-content h2 {
+    margin: 0 0 10px 0;
+    text-align: center;
+}
+
+.modal-content label {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.modal-content select,
+.modal-content textarea {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    width: 100%;
+}
+
+.modal-content textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.modal-buttons button {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+#cancelSave {
+    background-color: #e0e0e0;
+}
+
+#cancelSave:hover {
+    background-color: #c6c6c6;
+}
+
+#confirmSave {
+    background-color: #2d7ef7;
+    color: white;
+}
+
+#confirmSave:hover {
+    background-color: #1c5fd1;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.star-container {
+    display: flex;
+    gap: 5px;
+    font-size: 30px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.star {
+    color: #ccc;
+    text-shadow: 0 0 1px #999;
+    transition: color 0.2s, transform 0.1s;
+}
+
+.star:hover,
+.star.hovered {
+    transform: scale(1.2);
+}
+
+.star.selected {
+    color: gold;
+    text-shadow: 0 0 2px #b58900;
+}
+
+.article-grade {
+    color: gold;
+    font-size: 18px;
+}

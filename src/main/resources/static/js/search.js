@@ -9,6 +9,9 @@ let currentQuery = '';
 let pageSize = 10;
 let totalPages = 0;
 
+let selectedArticleElement = null;
+let selectedArticleData = null;
+
 async function fetchResults(query, page = 1) {
     currentQuery = query;
     currentPage = page;
@@ -17,11 +20,11 @@ async function fetchResults(query, page = 1) {
 
     try {
         const response = await axios.get('/api/search', {
-            params: {search: query, page: page, size: pageSize}
+            params: { search: query, page: page, size: pageSize }
         });
         const data = response.data;
-
         resultsDiv.innerHTML = '';
+
         if (data.error) {
             resultsDiv.innerHTML = `<p>${data.error}: ${data.message}</p>`;
             return;
@@ -37,6 +40,7 @@ async function fetchResults(query, page = 1) {
         data.results.forEach(article => {
             const clone = articleTemplate.content.cloneNode(true);
 
+            const articleDiv = clone.querySelector('.article');
             const titleLink = clone.querySelector('.article-title a');
             const snippetEl = clone.querySelector('.article-snippet');
             const commentsEl = clone.querySelector('.article-comments');
@@ -45,31 +49,23 @@ async function fetchResults(query, page = 1) {
             const actionBtn = clone.querySelector('.article-action-button');
 
             actionBtn.id = `btn-${article.pageid}`;
-
             titleLink.textContent = article.title;
             titleLink.href = `https://el.wikipedia.org/?curid=${article.pageid}`;
             snippetEl.textContent = article.snippet;
 
             if (article.category) {
-                const comment = article.comment !== undefined && article.comment !== null ? article.comment : "";
-                const grade = article.grade !== undefined && article.grade !== null ? article.grade : "undefined";
-                const category = article.category;
-
-                commentsEl.textContent = comment;
-                gradeEl.textContent = grade;
-                categoryEl.textContent = category;
+                commentsEl.textContent = article.comment ?? '';
+                gradeEl.innerHTML = renderStars(article.grade ?? 0);
+                categoryEl.textContent = article.category;
 
                 actionBtn.disabled = true;
-                actionBtn.replaceWith(actionBtn.cloneNode(true));
             } else {
                 commentsEl.parentElement.remove();
                 gradeEl.parentElement.remove();
                 categoryEl.parentElement.remove();
 
                 actionBtn.disabled = false;
-                actionBtn.addEventListener('click', () => {
-                    console.log(`Pressed for article: ${article.title}, pageId: ${article.pageid}`);
-                });
+                actionBtn.addEventListener('click', () => openModal(article, articleDiv));
             }
 
             resultsDiv.appendChild(clone);
@@ -96,9 +92,7 @@ function renderPagination() {
     const startPage = Math.max(1, currentPage - 5);
     const endPage = Math.min(totalPages, startPage + 9);
 
-    for (let i = startPage; i <= endPage; i++) {
-        createButton(i);
-    }
+    for (let i = startPage; i <= endPage; i++) createButton(i);
 }
 
 searchButton.addEventListener('click', () => {
@@ -112,3 +106,112 @@ searchInput.addEventListener('keypress', (e) => {
         if (query) fetchResults(query, 1);
     }
 });
+
+const modal = document.getElementById('saveModal');
+const cancelBtn = document.getElementById('cancelSave');
+const confirmBtn = document.getElementById('confirmSave');
+const categorySelect = document.getElementById('categorySelect');
+const commentsInput = document.getElementById('commentsInput');
+const starButtons = document.querySelectorAll('#gradeStars .star');
+
+let selectedGrade = 1;
+
+async function loadCategories() {
+    try {
+        const response = await axios.get('/api/categories');
+        const categories = response.data;
+        categorySelect.innerHTML = '<option value="">Select category</option>';
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.title;
+            option.dataset.title = cat.title;
+            categorySelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+loadCategories();
+
+function openModal(articleData, articleElement) {
+    selectedArticleData = articleData;
+    selectedArticleElement = articleElement;
+    selectedGrade = 1;
+    updateStarDisplay();
+    modal.classList.remove('hidden');
+}
+
+function closeModal() {
+    modal.classList.add('hidden');
+    categorySelect.value = '';
+    commentsInput.value = '';
+    selectedGrade = 1;
+    updateStarDisplay();
+    selectedArticleData = null;
+    selectedArticleElement = null;
+}
+
+cancelBtn.addEventListener('click', closeModal);
+window.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+starButtons.forEach(star => {
+    star.addEventListener('click', () => { selectedGrade = parseInt(star.dataset.value); updateStarDisplay(); });
+    star.addEventListener('mouseover', () => {
+        const hoverValue = parseInt(star.dataset.value);
+        starButtons.forEach(s => s.classList.toggle('selected', parseInt(s.dataset.value) <= hoverValue));
+    });
+    star.addEventListener('mouseout', () => updateStarDisplay());
+});
+
+function updateStarDisplay() {
+    starButtons.forEach(star => star.classList.toggle('selected', parseInt(star.dataset.value) <= selectedGrade));
+}
+
+confirmBtn.addEventListener('click', () => {
+    if (!selectedArticleData) return;
+
+    const selectedOption = categorySelect.selectedOptions[0];
+    const categoryId = selectedOption?.value;
+    const categoryTitle = selectedOption?.dataset.title;
+    const comment = commentsInput.value.trim();
+    const grade = selectedGrade;
+
+    if (!categoryId) {
+        alert('Please select a category.');
+        return;
+    }
+
+    console.log('Save pressed for pageId:', selectedArticleData.pageid);
+    console.log('Category ID:', categoryId, 'Grade:', grade);
+
+    const actionBtn = selectedArticleElement.querySelector('.article-action-button');
+    actionBtn.disabled = true;
+    actionBtn.textContent = 'Save';
+
+    const extraDiv = selectedArticleElement.querySelector('.article-extra');
+    if (!selectedArticleElement.querySelector('.article-comments')) {
+        const commentP = document.createElement('p');
+        commentP.innerHTML = `<strong>Comments:</strong> <span class="article-comments">${comment}</span>`;
+        extraDiv.appendChild(commentP);
+
+        const gradeP = document.createElement('p');
+        gradeP.innerHTML = `<strong>Grade:</strong> <span class="article-grade">${renderStars(grade)}</span>`;
+        extraDiv.appendChild(gradeP);
+
+        const categoryP = document.createElement('p');
+        categoryP.innerHTML = `<strong>Category:</strong> <span class="article-category">${categoryTitle}</span>`;
+        extraDiv.appendChild(categoryP);
+    }
+
+    closeModal();
+});
+
+function renderStars(grade) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        stars += i <= grade ? '<span class="filled">★</span>' : '<span class="empty">☆</span>';
+    }
+    return stars;
+}

@@ -16,16 +16,21 @@ public class Article {
     private Category category;
 
     private String comments;
+    private String tittle;
+    @Column(length = 20000)
+    private String snippet;
 
     private Integer grade;
 
     public Article() {}
 
-    public Article(Integer pageId, Category category, String comments, Integer grade) {
+    public Article(Integer pageId, Category category, String comments, Integer grade, String tittle, String snippet) {
         this.pageId = pageId;
         this.category = category;
         this.comments = comments;
         this.grade = grade;
+        this.tittle = tittle;
+        this.snippet = snippet;
     }
 
     public Long getId() { return id; }
@@ -39,6 +44,12 @@ public class Article {
 
     public String getComments() { return comments; }
     public void setComments(String comments) { this.comments = comments; }
+
+    public String getTittle() { return tittle; }
+    public void setTittle(String tittle) { this.tittle = tittle; }
+
+    public String getSnippet() { return snippet; }
+    public void setSnippet(String snippet) { this.snippet = snippet; }
 
     public Integer getGrade() { return grade; }
     public void setGrade(Integer grade) {

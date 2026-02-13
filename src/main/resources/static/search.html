@@ -12,7 +12,11 @@
 <h1>Your Wikipedia Search Hub 🔍</h1>
 
 <div class="search-container">
-    <input type="text" id="searchInput" placeholder="Type keywords to search..." aria-label="Search Wikipedia">
+    <input
+            type="text"
+            id="searchInput"
+            placeholder="Type keywords to search..."
+            aria-label="Search Wikipedia">
     <button id="searchButton">Search</button>
 </div>
 
@@ -26,16 +30,65 @@
                 <a href="#" target="_blank"></a> 🔗
             </h3>
             <p class="article-snippet"></p>
+
             <div class="article-extra">
-                <p><strong>Comments:</strong> <span class="article-comments"></span></p>
-                <p><strong>Grade:</strong> <span class="article-grade"></span></p>
-                <p><strong>Category:</strong> <span class="article-category"></span></p>
+                <p><strong>Comments:</strong>
+                    <span class="article-comments"></span>
+                </p>
+                <p><strong>Grade:</strong>
+                    <span class="article-grade"></span>
+                </p>
+                <p><strong>Category:</strong>
+                    <span class="article-category"></span>
+                </p>
             </div>
         </div>
-        <button class="article-action-button" disabled>Save</button>
+
+        <button class="article-action-button" disabled>
+            Save
+        </button>
     </div>
 </template>
 
+<div id="saveModal" class="modal hidden">
+    <div class="modal-content">
+        <h2>Save Article</h2>
+
+        <label for="categorySelect">Category</label>
+        <select id="categorySelect" required>
+            <option value="">Select category</option>
+            <option value="History">History</option>
+            <option value="Science">Science</option>
+            <option value="Technology">Technology</option>
+            <option value="Art">Art</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label for="commentsInput">Comments</label>
+        <textarea
+                id="commentsInput"
+                rows="5"
+                placeholder="Write your comments...">
+            </textarea>
+
+        <label>Grade</label>
+        <div id="gradeStars" class="star-container">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+        </div>
+
+
+        <div class="modal-buttons">
+            <button type="button" id="cancelSave">Cancel</button>
+            <button type="button" id="confirmSave">Save</button>
+        </div>
+    </div>
+</div>
+
 <script src="/js/search.js"></script>
+
 </body>
 </html>
