@@ -20,4 +20,9 @@ public class CategoryController {
     public List<Category> getAllCategories() {
         return categoryService.getAllCategories();
     }
+
+    @GetMapping("/api/categories/public")
+    public List<Category> getAllEditableCategories() {
+        return categoryService.getAllEditableCategories();
+    }
 }

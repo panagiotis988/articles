@@ -2,13 +2,22 @@ package com.wikipedia.articles.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wikipedia.articles.models.Category;
+import com.wikipedia.articles.repositories.ArticleRepository;
+import com.wikipedia.articles.repositories.CategoryRepository;
+import com.wikipedia.articles.repositories.StatisticRepository;
 import org.jsoup.Jsoup;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.wikipedia.articles.models.Article;
+import com.wikipedia.articles.models.Statistic;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.*;
 
 @Service
@@ -17,12 +26,24 @@ public class ArticleService {
     private static final String WIKI_API = "https://el.wikipedia.org/w/api.php";
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ArticleRepository articleRepository;
+    private final StatisticRepository statisticRepository;
+    private final CategoryRepository categoryRepository;
+
+    public ArticleService(ArticleRepository articleRepository, StatisticRepository statisticRepository, CategoryRepository categoryRepository) {
+        this.articleRepository = articleRepository;
+        this.statisticRepository = statisticRepository;
+        this.categoryRepository = categoryRepository;
+    }
+
 
     public Map<String, Object> searchWikipedia(String search, int page, int size) {
+        System.out.println("to search einai  is   " + search);
+
         try {
             int offset = (page - 1) * size;
             String url = buildWikiUrl(search, size, offset);
-
+            System.out.println(url);
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "MyWikipediaApp/1.0");
 
@@ -34,6 +55,7 @@ public class ArticleService {
             });
             Map<String, Object> queryMap = asMap(responseMap.get("query"));
             List<Map<String, Object>> results = asListOfMap(queryMap.get("search"));
+            System.out.println(" first results is   " + results);
 
             results.forEach(this::cleanSnippet);
 
@@ -41,8 +63,8 @@ public class ArticleService {
                     .map(v -> (Integer) v)
                     .orElse(0);
 
-            //TODO remove and replace with real data once database data implementation works
-            addTestFields(results);
+            searchCounter(search);
+            addArticleDetails(results);
 
             Map<String, Object> finalResponse = new HashMap<>();
             finalResponse.put("page", page);
@@ -50,6 +72,18 @@ public class ArticleService {
             finalResponse.put("totalHits", totalHits);
             finalResponse.put("totalPages", (int) Math.ceil((double) totalHits / size));
             finalResponse.put("results", results);
+
+            System.out.println("url is   " + url);
+            System.out.println("headers is   " + headers);
+            System.out.println("response is   " + response);
+            System.out.println("responseMap is   " + responseMap);
+            System.out.println("queryMap is   " + queryMap);
+            System.out.println("totalHits is   " + totalHits);
+            System.out.println("response.getBody()   " + response.getBody());
+            System.out.println("finalResponse is   " + finalResponse);
+            System.out.println("results is   " + results);
+
+            addArticleDetails(results);
 
             return finalResponse;
 
@@ -62,23 +96,56 @@ public class ArticleService {
     }
 
     private String buildWikiUrl(String search, int size, int offset) {
-        return String.format("%s?action=query&list=search&srsearch=%s&srlimit=%d&sroffset=%d&srsort=last_edit_desc&format=json",
-                WIKI_API, URLEncoder.encode(search, StandardCharsets.UTF_8), size, offset);
+        String safeSearch = search.trim().replace(" ", "+");
+        safeSearch = safeSearch.replace("#", "")
+                .replace("&", "")
+                .replace("?", "")
+                .replace("%", "")
+                .replace("<", "")
+                .replace(">", "")
+                .replace("\"", "")
+                .replace("'", "");
+
+        return String.format(
+                "%s?action=query&list=search&srsearch=%s&srlimit=%d&sroffset=%d&srsort=relevance&format=json&formatversion=2&utf8=1",
+                WIKI_API, safeSearch, size, offset);
     }
+
 
     private void cleanSnippet(Map<String, Object> article) {
         if (article.get("snippet") != null) {
             String snippet = Jsoup.parse((String) article.get("snippet")).text();
             article.put("snippet", snippet);
+
         }
     }
 
-    private void addTestFields(List<Map<String, Object>> results) {
-        if (!results.isEmpty()) {
-            Map<String, Object> first = results.get(0);
-            first.put("comment", "just a test comment");
-            first.put("grade", 5);
-            first.put("category", "test");
+    private void addArticleDetails(List<Map<String, Object>> results) {
+        List<Article> savedArticles = savedPageIds(results);
+        System.out.println("savedArticles is   " + savedArticles);
+
+        Map<Integer, Article> savedByPageId = new HashMap<>();
+        for (Article a : savedArticles) {
+            if (a.getPageId() != null) {
+                savedByPageId.put(a.getPageId(), a);
+
+            }
+        }
+
+        for (Map<String, Object> r : results) {
+            Object pageIdObj = r.get("pageid");
+
+            if (!(pageIdObj instanceof Number)) continue;
+
+            int pageId = ((Number) pageIdObj).intValue();
+
+            Article saved = savedByPageId.get(pageId);
+
+            if (saved != null) {
+                r.put("comment", saved.getComments());
+                r.put("grade", saved.getGrade());
+                r.put("category", saved.getCategory().getTitle());
+            }
         }
     }
 
@@ -90,5 +157,62 @@ public class ArticleService {
     private List<Map<String, Object>> asListOfMap(Object obj) {
         return objectMapper.convertValue(obj, new TypeReference<List<Map<String, Object>>>() {
         });
+    }
+
+    private List<Article> savedPageIds(List<Map<String, Object>> results) {
+        List<Integer> wikiPageIds = new ArrayList<>();
+
+        for (Map<String, Object> article : results) {
+            Object wikiPageIdsObj = article.get("pageid");
+            int wikiPageId = ((Number) wikiPageIdsObj).intValue();
+            wikiPageIds.add(wikiPageId);
+        }
+
+        return articleRepository.findByPageIdIn(wikiPageIds);
+    }
+
+    private void searchCounter(String search) {
+        Statistic stat;
+        String word = search.trim().toLowerCase();
+        Optional<Statistic> findWord = statisticRepository.findByWord(word);
+
+        if (findWord.isPresent()) {
+            stat = findWord.get();
+            Integer current = stat.getCounter();
+            stat.setCounter((current == null ? 0 : current) + 1);
+        } else {
+            stat = new Statistic(word, 1);
+        }
+        statisticRepository.save(stat);
+    }
+
+    public Article createArticle(
+            Long categoryId,
+            Integer grade,
+            Integer pageId,
+            String snippet,
+            String title,
+            String comment) {
+        if (articleRepository.findByPageId(pageId).isPresent()) {
+            throw new ResponseStatusException(CONFLICT, "Article already exists");
+        }
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+
+        Article article = new Article();
+        article.setPageId(pageId);
+        article.setCategory(category);
+        article.setComments(comment);
+        article.setTitle(title);
+        article.setSnippet(snippet);
+
+        try {
+            article.setGrade(grade);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(BAD_REQUEST, ex.getMessage());
+        }
+
+        return articleRepository.save(article);
     }
 }

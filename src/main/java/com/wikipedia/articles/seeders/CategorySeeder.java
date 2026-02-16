@@ -20,17 +20,23 @@ public class CategorySeeder implements CommandLineRunner {
     @Override
     public void run(String @NonNull ... args) throws Exception {
         List<String> categories = List.of(
-                "Science",
+                "Uncategorized",
                 "Technology",
                 "History",
                 "Arts",
                 "Sports",
-                "Countries"
+                "Countries",
+                "Science"
         );
 
         for (String title : categories) {
             categoryRepository.findByTitle(title)
-                    .orElseGet(() -> categoryRepository.save(new Category(title)));
+                    .orElseGet(() -> {
+                        boolean isProtected = "Uncategorized".equalsIgnoreCase(title);
+
+                        Category category = new Category(title, isProtected);
+                        return categoryRepository.save(category);
+                    });
         }
 
         System.out.println("✅ Categories seeded successfully!");

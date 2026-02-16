@@ -16,7 +16,7 @@ public class Article {
     private Category category;
 
     private String comments;
-    private String tittle;
+    private String title;
     @Column(length = 20000)
     private String snippet;
 
@@ -24,12 +24,12 @@ public class Article {
 
     public Article() {}
 
-    public Article(Integer pageId, Category category, String comments, Integer grade, String tittle, String snippet) {
+    public Article(Integer pageId, Category category, String comments, Integer grade, String title, String snippet) {
         this.pageId = pageId;
         this.category = category;
         this.comments = comments;
         this.grade = grade;
-        this.tittle = tittle;
+        this.title = title;
         this.snippet = snippet;
     }
 
@@ -45,8 +45,9 @@ public class Article {
     public String getComments() { return comments; }
     public void setComments(String comments) { this.comments = comments; }
 
-    public String getTittle() { return tittle; }
-    public void setTittle(String tittle) { this.tittle = tittle; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
 
     public String getSnippet() { return snippet; }
     public void setSnippet(String snippet) { this.snippet = snippet; }

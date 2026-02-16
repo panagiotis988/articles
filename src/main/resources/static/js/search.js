@@ -20,7 +20,7 @@ async function fetchResults(query, page = 1) {
 
     try {
         const response = await axios.get('/api/search', {
-            params: { search: query, page: page, size: pageSize }
+            params: {search: query, page: page, size: pageSize}
         });
         const data = response.data;
         resultsDiv.innerHTML = '';
@@ -132,6 +132,7 @@ async function loadCategories() {
         console.error('Error loading categories:', error);
     }
 }
+
 loadCategories();
 
 function openModal(articleData, articleElement) {
@@ -153,11 +154,18 @@ function closeModal() {
 }
 
 cancelBtn.addEventListener('click', closeModal);
-window.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+window.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+});
 
 starButtons.forEach(star => {
-    star.addEventListener('click', () => { selectedGrade = parseInt(star.dataset.value); updateStarDisplay(); });
+    star.addEventListener('click', () => {
+        selectedGrade = parseInt(star.dataset.value);
+        updateStarDisplay();
+    });
     star.addEventListener('mouseover', () => {
         const hoverValue = parseInt(star.dataset.value);
         starButtons.forEach(s => s.classList.toggle('selected', parseInt(s.dataset.value) <= hoverValue));
@@ -169,7 +177,7 @@ function updateStarDisplay() {
     starButtons.forEach(star => star.classList.toggle('selected', parseInt(star.dataset.value) <= selectedGrade));
 }
 
-confirmBtn.addEventListener('click', () => {
+confirmBtn.addEventListener('click', async () => {
     if (!selectedArticleData) return;
 
     const selectedOption = categorySelect.selectedOptions[0];
@@ -183,8 +191,29 @@ confirmBtn.addEventListener('click', () => {
         return;
     }
 
-    console.log('Save pressed for pageId:', selectedArticleData.pageid);
-    console.log('Category ID:', categoryId, 'Grade:', grade);
+    const payload = {
+        pageId: selectedArticleData.pageid,
+        categoryId: Number(categoryId),
+        grade: grade,
+        comment: comment,
+        title: selectedArticleData.title,
+        snippet: selectedArticleData.snippet
+    };
+
+    let saved;
+    try {
+        const response = await axios.post('/api/articles', payload);
+        saved = response.data;
+    } catch (error) {
+        console.log(error)
+        const message = error?.response?.data?.message ?? error.message;
+        alert(`Save failed: ${message}`);
+        return;
+    }
+
+    const savedComment = saved?.comment ?? comment;
+    const savedGrade = saved?.grade ?? grade;
+    const savedCategoryTitle = saved?.category?.title ?? categoryTitle;
 
     const actionBtn = selectedArticleElement.querySelector('.article-action-button');
     actionBtn.disabled = true;
@@ -193,15 +222,15 @@ confirmBtn.addEventListener('click', () => {
     const extraDiv = selectedArticleElement.querySelector('.article-extra');
     if (!selectedArticleElement.querySelector('.article-comments')) {
         const commentP = document.createElement('p');
-        commentP.innerHTML = `<strong>Comments:</strong> <span class="article-comments">${comment}</span>`;
+        commentP.innerHTML = `<strong>Comments:</strong> <span class="article-comments">${savedComment}</span>`;
         extraDiv.appendChild(commentP);
 
         const gradeP = document.createElement('p');
-        gradeP.innerHTML = `<strong>Grade:</strong> <span class="article-grade">${renderStars(grade)}</span>`;
+        gradeP.innerHTML = `<strong>Grade:</strong> <span class="article-grade">${renderStars(savedGrade)}</span>`;
         extraDiv.appendChild(gradeP);
 
         const categoryP = document.createElement('p');
-        categoryP.innerHTML = `<strong>Category:</strong> <span class="article-category">${categoryTitle}</span>`;
+        categoryP.innerHTML = `<strong>Category:</strong> <span class="article-category">${savedCategoryTitle}</span>`;
         extraDiv.appendChild(categoryP);
     }
 

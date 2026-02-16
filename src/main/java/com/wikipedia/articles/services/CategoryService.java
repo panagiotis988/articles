@@ -19,6 +19,10 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
+    public List<Category> getAllEditableCategories() {
+        return categoryRepository.findByIsProtectedFalse();
+    }
+
     public Category getCategoryById(Long id) {
         return categoryRepository.findById(id)
                 .orElse(null);

@@ -1,9 +1,6 @@
 package com.wikipedia.articles.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class Category {
@@ -14,10 +11,14 @@ public class Category {
 
     private String title;
 
+    @Column(name = "is_protected", nullable = false)
+    private boolean isProtected = false;
+
     public Category() {}
 
-    public Category(String title) {
+    public Category(String title, boolean isProtected) {
         this.title = title;
+        this.isProtected = isProtected;
     }
 
     public Long getId() { return id; }
@@ -25,4 +26,7 @@ public class Category {
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    public boolean isProtected() { return isProtected; }
+    public void setProtected(boolean isProtected) { this.isProtected = isProtected; }
 }
