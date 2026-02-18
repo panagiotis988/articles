@@ -3,7 +3,12 @@ package com.wikipedia.articles.services;
 import com.wikipedia.articles.models.Category;
 import com.wikipedia.articles.repositories.CategoryRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 /**
  * Service responsible for category-related business logic.
@@ -45,5 +50,33 @@ public class CategoryService {
      */
     public List<Category> getAllEditableCategories() {
         return categoryRepository.findByIsProtectedFalse();
+    }
+
+    /**
+     * Creates a new category with the given title.
+     * - Validates that the title is not empty.
+     * - Checks if a category with the same title (case-insensitive) already exists.
+     *   If it does, throws a 400 BAD_REQUEST with message "Category already exists".
+     * - If the title is valid and unique, creates and saves a new Category.
+     *
+     * @param title the name of the category to create
+     * @return the newly created {@link Category} object
+     * @throws ResponseStatusException if the title is empty or already exists
+     */
+    public Category createCategory(String title) {
+        if (!StringUtils.hasText(title)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Category name is required");
+        }
+
+        String normalizedTitle = title.trim();
+
+        boolean exists = categoryRepository.existsByTitleIgnoreCase(normalizedTitle);
+        if (exists) {
+            throw new ResponseStatusException(BAD_REQUEST, "Category already exists");
+        }
+
+        Category category = new Category();
+        category.setTitle(normalizedTitle);
+        return categoryRepository.save(category);
     }
 }

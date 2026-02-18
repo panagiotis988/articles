@@ -1,8 +1,12 @@
 package com.wikipedia.articles.controllers;
 
+import com.wikipedia.articles.dto.CategoryCreateRequest;
 import com.wikipedia.articles.models.Category;
 import com.wikipedia.articles.services.CategoryService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -51,5 +55,19 @@ public class CategoryController {
     @GetMapping("/api/categories/public")
     public List<Category> getAllEditableCategories() {
         return categoryService.getAllEditableCategories();
+    }
+
+
+    /**
+     * Creates a new category if it does not already exist.
+     * Accepts a {@link CategoryCreateRequest} containing the category name.
+     * If a category with the same name already exists, it will return the existing one.
+     *
+     * @param request the category creation request containing the name
+     * @return the newly created or existing {@link Category} object
+     */
+    @PostMapping("/api/categories")
+    public Category createCategory(@Valid @RequestBody CategoryCreateRequest request) {
+        return categoryService.createCategory(request.getName());
     }
 }

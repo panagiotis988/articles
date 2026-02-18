@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
+    boolean existsByTitleIgnoreCase(String title);
     Optional<Category> findByTitle(String title);
     List<Category> findByIsProtectedFalse();
 }

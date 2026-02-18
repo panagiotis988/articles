@@ -23,6 +23,7 @@ function loadCategories() {
             console.error('Error loading categories:', error);
         });
 }
+
 function renderCategories() {
     container.innerHTML = '';
 
@@ -57,6 +58,7 @@ function renderCategories() {
         container.appendChild(row);
     });
 }
+
 function toggleEdit(category, titleDiv, editBtn) {
     const isEditing = editBtn.classList.contains('save');
 
@@ -150,25 +152,51 @@ cancelCreateBtn.onclick = () => {
     createModal.classList.add('hidden');
 };
 
+const errorModal = document.getElementById('errorModal');
+const errorMessage = document.getElementById('errorModalMessage');
+const closeErrorBtn = document.getElementById('closeErrorModal');
+
+document.getElementById('createCategoryBtn').onclick = () => {
+    createModal.classList.remove('hidden');
+};
+
+cancelCreateBtn.onclick = () => {
+    createModal.classList.add('hidden');
+    newCategoryTitleInput.value = '';
+};
+
 confirmCreateBtn.onclick = () => {
     const title = newCategoryTitleInput.value.trim();
-    if (!title) return alert('Please enter a title');
+    if (!title) {
+        showErrorModal('Please enter a title');
+        return;
+    }
 
-    // Backend POST
-    /*
-    axios.post('/api/categories', { title })
+    axios.post('/api/categories', {title})
         .then(() => {
             createModal.classList.add('hidden');
+            newCategoryTitleInput.value = '';
             loadCategories();
         })
-        .catch(err => console.error('Create failed:', err));
-    */
-
-    // Local POST
-    const newId = categories.length ? Math.max(...categories.map(c => c.id)) + 1 : 1;
-    categories.push({ id: newId, title: title });
-    createModal.classList.add('hidden');
-    renderCategories();
+        .catch(error => {
+            let message = 'Category creation failed.';
+            if (error.response) {
+                message = error.response.data?.message || message;
+            } else {
+                console.error('Create failed:', error);
+            }
+            showErrorModal(message);
+        });
 };
+
+function showErrorModal(message) {
+    errorMessage.textContent = message;
+    errorModal.classList.remove('hidden');
+}
+
+closeErrorBtn.onclick = () => {
+    errorModal.classList.add('hidden');
+};
+
 
 loadCategories();
