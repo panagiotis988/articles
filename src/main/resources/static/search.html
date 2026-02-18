@@ -14,10 +14,12 @@
     <nav class="header-nav">
         <a href="/my-articles.html" class="header-link">My Articles</a>
         <a href="/categories.html" class="header-link">Categories</a>
+        <a href="/search.html" class="header-link">Search</a>
+        <a href="/statistics.html" class="header-link">Statistics</a>
     </nav>
 </header>
 
-<h1>Your Wikipedia Search Hub 🔍</h1>
+<h1>🔍 Your Wikipedia Search Hub</h1>
 
 <div class="search-container">
     <input
@@ -92,6 +94,16 @@
         <div class="modal-buttons">
             <button type="button" id="cancelSave">Cancel</button>
             <button type="button" id="confirmSave">Save</button>
+        </div>
+    </div>
+</div>
+
+<div id="errorModal" class="modal hidden">
+    <div class="modal-content error-modal">
+        <h3>Error</h3>
+        <p id="errorMessage"></p>
+        <div class="modal-buttons">
+            <button type="button" id="closeError">OK</button>
         </div>
     </div>
 </div>

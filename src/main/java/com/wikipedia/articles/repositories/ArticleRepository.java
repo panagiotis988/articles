@@ -12,4 +12,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     Optional<Article> findByPageId(Integer pageId);
     List<Article> id(Long id);
     List<Article> findByPageIdIn(List<Integer> pageId);
+    List<Article> findByTitleContainingIgnoreCaseOrSnippetContainingIgnoreCase(String tittle, String snippet);
+    List<Article> findByCategoryId(Long categoryId);
+    List<Article> findByCategoryIdAndTitleContainingIgnoreCaseOrCategoryIdAndSnippetContainingIgnoreCase(Long categoryIdTittle,String tittle,Long categoryIdSnippet, String snippet);
 }

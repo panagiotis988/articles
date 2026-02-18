@@ -2,14 +2,94 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
     <title>My Articles</title>
+    <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="css/my-articles.css">
 </head>
 <body>
 
-<header>
-    <h1>Todo</h1>
+<header class="main-header">
+    <nav class="header-nav">
+        <a href="/my-articles.html" class="header-link">My Articles</a>
+        <a href="/categories.html" class="header-link">Categories</a>
+        <a href="/search.html" class="header-link">Search</a>
+        <a href="/statistics.html" class="header-link">Statistics</a>
+    </nav>
 </header>
+
+<div class="toolbar">
+
+    <button id="searchBtn" class="toolbar-btn">📚 All Articles</button>
+
+    <button id="openFiltersBtn" class="toolbar-btn">⚙ Filters</button>
+
+</div>
+
+<main id="categories-container"></main>
+
+<div id="filtersModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Filter Articles</h3>
+
+        <label for="categoryDropdown">Category</label>
+        <select id="categoryDropdown">
+            <option value="">Loading categories...</option>
+        </select>
+
+        <label for="searchInput">Search</label>
+        <input
+                type="text"
+                id="searchInput"
+                placeholder="Search articles..."
+        >
+
+        <div class="modal-actions">
+            <button id="closeFiltersBtn" class="btn-cancel">Cancel</button>
+            <button id="clearFiltersBtn" class="btn-clear">Clear Filters</button>
+            <button id="applyFiltersBtn" class="btn-create-modal">Apply</button>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Edit Article</h3>
+
+        <label for="editComment">Comments</label>
+        <textarea id="editComment" rows="3"></textarea>
+
+        <label for="editCategory">Category</label>
+        <select id="editCategory">
+            <option value="">Loading...</option>
+        </select>
+
+        <label>Grade</label>
+        <div id="editGrade" class="grade-stars">
+        </div>
+
+        <div class="modal-actions">
+            <button id="cancelEdit" class="btn-cancel">Cancel</button>
+            <button id="saveEdit" class="btn-create-modal">Save</button>
+        </div>
+    </div>
+</div>
+
+<div id="deleteModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Delete Article</h3>
+        <p>Are you sure you want to delete this article?</p>
+
+        <div class="modal-actions">
+            <button id="cancelDelete">Cancel</button>
+            <button id="confirmDelete" class="delete">Delete</button>
+        </div>
+    </div>
+</div>
+
+
+<script src="js/my-articles.js"></script>
 
 </body>
 </html>

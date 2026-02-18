@@ -3,6 +3,9 @@ const searchButton = document.getElementById('searchButton');
 const resultsDiv = document.getElementById('results');
 const paginationDiv = document.getElementById('pagination');
 const articleTemplate = document.getElementById('articleTemplate');
+const errorModal = document.getElementById('errorModal');
+const errorMessage = document.getElementById('errorMessage');
+const closeErrorBtn = document.getElementById('closeError');
 
 let currentPage = 1;
 let currentQuery = '';
@@ -140,7 +143,14 @@ function openModal(articleData, articleElement) {
     selectedArticleElement = articleElement;
     selectedGrade = 1;
     updateStarDisplay();
+    commentsInput.value = '';
+    categorySelect.value = '';
+
     modal.classList.remove('hidden');
+    setTimeout(() => {
+        commentsInput.focus();
+        commentsInput.setSelectionRange(0, 0);
+    }, 0);
 }
 
 function closeModal() {
@@ -187,7 +197,7 @@ confirmBtn.addEventListener('click', async () => {
     const grade = selectedGrade;
 
     if (!categoryId) {
-        alert('Please select a category.');
+        showError('Please select a category.');
         return;
     }
 
@@ -244,3 +254,19 @@ function renderStars(grade) {
     }
     return stars;
 }
+
+function showError(message) {
+    errorMessage.textContent = message;
+    errorModal.classList.remove('hidden');
+}
+
+closeErrorBtn.addEventListener('click', () => {
+    errorModal.classList.add('hidden');
+});
+
+window.addEventListener('click', (e) => {
+    if (e.target === errorModal) {
+        errorModal.classList.add('hidden');
+    }
+});
+

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.wikipedia.articles.models.Article;
 import com.wikipedia.articles.models.Statistic;
+
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -19,7 +20,17 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Service responsible for article-related business logic.
+ * Handles:
+ * - Searching Wikipedia
+ * - Managing saved articles
+ * - Adding article details
+ * - Tracking search statistics
+ * - Creating, updating, and deleting articles
+ */
 @Service
 public class ArticleService {
 
@@ -30,13 +41,24 @@ public class ArticleService {
     private final StatisticRepository statisticRepository;
     private final CategoryRepository categoryRepository;
 
+    /**
+     * Constructor-based dependency injection.
+     */
     public ArticleService(ArticleRepository articleRepository, StatisticRepository statisticRepository, CategoryRepository categoryRepository) {
         this.articleRepository = articleRepository;
         this.statisticRepository = statisticRepository;
         this.categoryRepository = categoryRepository;
     }
 
-
+    /**
+     * Searches Wikipedia using the API.
+     * Adds local article details and tracks search statistics.
+     *
+     * @param search the search query
+     * @param page   page number
+     * @param size   number of results per page
+     * @return map with paginated search results
+     */
     public Map<String, Object> searchWikipedia(String search, int page, int size) {
         System.out.println("to search einai  is   " + search);
 
@@ -95,6 +117,10 @@ public class ArticleService {
         }
     }
 
+
+    /**
+     * Builds a safe Wikipedia API URL with sanitized search string.
+     */
     private String buildWikiUrl(String search, int size, int offset) {
         String safeSearch = search.trim().replace(" ", "+");
         safeSearch = safeSearch.replace("#", "")
@@ -112,6 +138,14 @@ public class ArticleService {
     }
 
 
+    /**
+     * Cleans the "snippet" field of a Wikipedia search result.
+     * Wikipedia returns snippets containing HTML tags (e.g., <span> highlights).
+     * This method parses the snippet using Jsoup and extracts plain text,
+     * replacing the original HTML snippet with a clean text version.
+     *
+     * @param article a map representing a single Wikipedia search result
+     */
     private void cleanSnippet(Map<String, Object> article) {
         if (article.get("snippet") != null) {
             String snippet = Jsoup.parse((String) article.get("snippet")).text();
@@ -120,6 +154,9 @@ public class ArticleService {
         }
     }
 
+    /**
+     * Adds local article details (grade, comment, category) to Wikipedia search results.
+     */
     private void addArticleDetails(List<Map<String, Object>> results) {
         List<Article> savedArticles = savedPageIds(results);
         System.out.println("savedArticles is   " + savedArticles);
@@ -149,16 +186,25 @@ public class ArticleService {
         }
     }
 
+    /**
+     * Converts an object to a Map<String, Object> using ObjectMapper.
+     */
     private Map<String, Object> asMap(Object obj) {
         return objectMapper.convertValue(obj, new TypeReference<Map<String, Object>>() {
         });
     }
 
+    /**
+     * Converts an object to a List<Map<String, Object>> using ObjectMapper.
+     */
     private List<Map<String, Object>> asListOfMap(Object obj) {
         return objectMapper.convertValue(obj, new TypeReference<List<Map<String, Object>>>() {
         });
     }
 
+    /**
+     * Retrieves saved articles matching Wikipedia page IDs.
+     */
     private List<Article> savedPageIds(List<Map<String, Object>> results) {
         List<Integer> wikiPageIds = new ArrayList<>();
 
@@ -171,6 +217,10 @@ public class ArticleService {
         return articleRepository.findByPageIdIn(wikiPageIds);
     }
 
+    /**
+     * Increments search counter for a given word.
+     * Creates a new Statistic record if the word does not exist.
+     */
     private void searchCounter(String search) {
         Statistic stat;
         String word = search.trim().toLowerCase();
@@ -186,6 +236,10 @@ public class ArticleService {
         statisticRepository.save(stat);
     }
 
+    /**
+     * Creates a new article.
+     * Validates uniqueness, category existence, and grade value.
+     */
     public Article createArticle(
             Long categoryId,
             Integer grade,
@@ -214,5 +268,67 @@ public class ArticleService {
         }
 
         return articleRepository.save(article);
+    }
+
+    /**
+     * Retrieves articles for a user filtered by search text and category.
+     */
+
+    public Map<String, List<Article>> myArticles(String search, Long categoryId) {
+        boolean hasSearch =
+                search != null && !search.trim().isEmpty();
+        boolean hasCategoryId =
+                categoryId != null;
+        List<Article> articles;
+
+        if ((hasSearch && hasCategoryId)) {
+            articles = articleRepository.findByCategoryIdAndTitleContainingIgnoreCaseOrCategoryIdAndSnippetContainingIgnoreCase(categoryId, search, categoryId, search);
+            System.out.println(articleRepository.findByCategoryIdAndTitleContainingIgnoreCaseOrCategoryIdAndSnippetContainingIgnoreCase(categoryId, search, categoryId, search));
+        } else if (!hasSearch && hasCategoryId) {
+            articles = articleRepository.findByCategoryId(categoryId);
+        } else if (hasSearch && !hasCategoryId) {
+            articles = articleRepository.findByTitleContainingIgnoreCaseOrSnippetContainingIgnoreCase(search, search);
+        } else {
+            articles = articleRepository.findAll();
+        }
+        Map<String, List<Article>> groupedArticles =
+                articles.stream().collect(Collectors.groupingBy(a -> a.getCategory().getTitle()));
+
+
+        return groupedArticles;
+    }
+
+
+
+    /**
+     * Updates an existing article.
+     * Can update grade, comment, and optionally category.
+     */
+    public Article updateArticle(Long id, Integer grade, String comment, Long categoryId) {
+
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        article.setGrade(grade);
+        article.setComments(comment);
+
+        if (categoryId != null) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            article.setCategory(category);
+        }
+
+        return articleRepository.save(article);
+    }
+
+
+    /**
+     * Deletes an article by ID.
+     * Throws NOT_FOUND if article does not exist.
+     */
+    public void deleteArticle(Long id) {
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Article not found"));
+        articleRepository.delete(article);
     }
 }

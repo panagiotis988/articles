@@ -2,25 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Manage Categories</title>
+    <link rel="stylesheet" href="/css/category.css">
     <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
-    <title>Categories</title>
-    <link rel="stylesheet" href="css/category.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
 
-<header class="header">
-    <a href="search.html" class="btn-back">← Back</a>
-    <h2 class="header-title">📚 You can manage your categories here</h2>
-    <button id="createCategoryBtn" class="btn-create">+ Create Category</button>
+<header class="main-header">
+    <nav class="header-nav">
+        <a href="/my-articles.html" class="header-link">My Articles</a>
+        <a href="/categories.html" class="header-link">Categories</a>
+        <a href="/search.html" class="header-link">Search</a>
+        <a href="/statistics.html" class="header-link">Statistics</a>
+    </nav>
 </header>
 
-<div id="categories-container"></div>
+<h1 class="front-title">📚 You can manage your categories here</h1>
+<button id="createCategoryBtn" class="export-pdf-btn">+ Create Category</button>
+
+<main id="categories-container"></main>
 
 <div id="deleteModal" class="modal hidden">
     <div class="modal-content">
         <h3>Delete Category</h3>
-        <p>Are you sure you want to delete this category?</p>
+        <p class="delete-message">
+            Are you sure you want to delete this category?<br>
+            <strong>Note:</strong> All articles belonging to this category will be moved to <em>Uncategorized</em>.
+        </p>
         <div class="modal-actions">
             <button id="cancelDelete" class="btn-cancel">Cancel</button>
             <button id="confirmDelete" class="btn-danger">Delete</button>
@@ -28,10 +38,10 @@
     </div>
 </div>
 
+
 <div id="createModal" class="modal hidden">
     <div class="modal-content">
         <h3>Create New Category</h3>
-        <label for="newCategoryTitle"></label>
         <input type="text" id="newCategoryTitle" placeholder="Enter category title" maxlength="40" />
         <div class="modal-actions">
             <button id="cancelCreate" class="btn-cancel">Cancel</button>
@@ -40,6 +50,6 @@
     </div>
 </div>
 
-<script src="js/category.js"></script>
+<script src="/js/category.js"></script>
 </body>
 </html>
