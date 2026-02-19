@@ -4,7 +4,10 @@ import com.wikipedia.articles.dto.CategoryCreateRequest;
 import com.wikipedia.articles.models.Category;
 import com.wikipedia.articles.services.CategoryService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -69,5 +72,17 @@ public class CategoryController {
     @PostMapping("/api/categories")
     public Category createCategory(@Valid @RequestBody CategoryCreateRequest request) {
         return categoryService.createCategory(request.getName());
+    }
+
+    /**
+     * Deletes a category by ID and reassigns its articles to "Uncategorized".
+     *
+     * @param categoryId the category ID to delete
+     * @return HTTP 204 No Content when deletion succeeds
+     */
+    @DeleteMapping("/api/categories/{categoryId}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId) {
+        categoryService.deleteCategory(categoryId);
+        return ResponseEntity.noContent().build();
     }
 }
