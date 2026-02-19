@@ -1,14 +1,16 @@
 package com.wikipedia.articles.services;
 
+import com.wikipedia.articles.models.Article;
 import com.wikipedia.articles.models.Category;
+import com.wikipedia.articles.repositories.ArticleRepository;
 import com.wikipedia.articles.repositories.CategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
  * Service responsible for category-related business logic.
@@ -23,14 +25,16 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ArticleRepository articleRepository;
 
     /**
      * Constructor-based dependency injection.
      *
      * @param categoryRepository repository used for category persistence operations
      */
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, ArticleRepository articleRepository) {
         this.categoryRepository = categoryRepository;
+        this.articleRepository = articleRepository;
     }
 
     /**
@@ -78,5 +82,37 @@ public class CategoryService {
         Category category = new Category();
         category.setTitle(normalizedTitle);
         return categoryRepository.save(category);
+    }
+
+    /**
+     * Deletes a category and reassigns its articles to the "Uncategorized" category.
+     * Steps:
+     * - Find the "Uncategorized" category
+     * - Find the category to delete
+     * - Move all articles from the category to delete into "Uncategorized"
+     * - Delete the category
+     *
+     * @param categoryId category ID to delete
+     */
+    public void deleteCategory(Long categoryId) {
+        Category uncategorized = categoryRepository.findByTitle("Uncategorized")
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Uncategorized category not found"));
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+
+        if (category.isProtected()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Protected categories cannot be deleted");
+        }
+
+        List<Article> articles = articleRepository.findByCategoryId(categoryId);
+        if (!articles.isEmpty()) {
+            for (Article article : articles) {
+                article.setCategory(uncategorized);
+            }
+            articleRepository.saveAll(articles);
+        }
+
+        categoryRepository.delete(category);
     }
 }

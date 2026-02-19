@@ -115,26 +115,21 @@ function deleteCategory(id) {
 
 confirmDeleteBtn.onclick = () => {
 
-    // Backend DELETE
-    /*
     axios.delete(`/api/categories/${deleteTargetId}`)
         .then(() => {
             modal.classList.add('hidden');
             loadCategories();
         })
         .catch(error => {
-            console.error('Delete failed:', error);
+            modal.classList.add('hidden');
+            let message = 'Delete failed.';
+            if (error.response) {
+                message = error.response.data?.message || message;
+            } else {
+                console.error('Delete failed:', error);
+            }
+            showErrorModal(message);
         });
-    */
-
-    // Local DELETE
-    const index = categories.findIndex(c => c.id === deleteTargetId);
-    if (index !== -1) {
-        categories.splice(index, 1);
-    }
-
-    modal.classList.add('hidden');
-    renderCategories();
 };
 
 
