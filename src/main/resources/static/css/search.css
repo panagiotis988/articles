@@ -318,6 +318,9 @@ button#searchButton:hover {
     display: flex;
     gap: 40px;
     padding-left: 20px;
+    padding-right: 20px;
+    width: 100%;
+    align-items: center;
 }
 
 .header-link {
@@ -331,6 +334,10 @@ button#searchButton:hover {
 
 .header-link:hover {
     color: #007BFF;
+}
+
+.header-link-docs {
+    margin-left: auto;
 }
 
 .error-modal {

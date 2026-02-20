@@ -56,6 +56,9 @@ body::after {
     display: flex;
     gap: 40px;
     padding-left: 20px;
+    padding-right: 20px;
+    width: 100%;
+    align-items: center;
 }
 
 .header-link {
@@ -69,6 +72,10 @@ body::after {
 
 .header-link:hover {
     color: #007BFF;
+}
+
+.header-link-docs {
+    margin-left: auto;
 }
 
 .front-title {
