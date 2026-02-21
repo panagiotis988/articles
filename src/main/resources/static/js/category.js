@@ -85,25 +85,26 @@ function toggleEdit(category, titleDiv, editBtn) {
 
         if (!newTitle) return;
 
-        // Backend PATCH
-        /*
-        axios.put(`/api/categories/${category.id}`, {
+        axios.patch(`/api/categories/${category.id}`, {
             title: newTitle
-        }).then(() => {
-            loadCategories();
-        }).catch(error => {
-            console.error('Update failed:', error);
-        });
-        */
+        })
+            .then(() => {
+                category.title = newTitle;
+                titleDiv.textContent = category.title;
 
-        // Local PATCH
-        category.title = newTitle;
+                editBtn.textContent = 'Edit';
+                editBtn.classList.remove('save');
+                editBtn.classList.add('edit');
+            })
+            .catch(error => {
+                let message = 'Update failed.';
 
-        titleDiv.textContent = category.title;
+                if (error.response) {
+                    message = error.response.data?.message || message;
+                }
 
-        editBtn.textContent = 'Edit';
-        editBtn.classList.remove('save');
-        editBtn.classList.add('edit');
+                showErrorModal(message);
+            });
     }
 }
 

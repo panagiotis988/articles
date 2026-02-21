@@ -54,10 +54,20 @@ public class StatisticService {
         List<Article> articles = articleRepository.findAll();
 
         Map<String, List<Article>> groupedArticles =
-                articles.stream().collect(Collectors.groupingBy(a -> a.getCategory().getTitle()));
+                articles.stream()
+                        .collect(Collectors.groupingBy(a -> a.getCategory().getTitle()));
+
+        Map<String, List<Article>> sortedGroupedArticles = groupedArticles.entrySet().stream()
+                .sorted((e1, e2) -> Integer.compare(e2.getValue().size(), e1.getValue().size()))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
 
         Map<String, Object> response = new HashMap<>();
-        response.put("categories", groupedArticles);
+        response.put("categories", sortedGroupedArticles);
         response.put("statistics", statistics);
 
         return response;
@@ -80,8 +90,17 @@ public class StatisticService {
         List<Statistic> statistics = statisticRepository.findAllByOrderByCounterDesc();
         List<Article> articles = articleRepository.findAll();
 
-        Map<String, List<Article>> groupedArticles =
-                articles.stream().collect(Collectors.groupingBy(a -> a.getCategory().getTitle()));
+        Map<String, List<Article>> groupedArticles = articles.stream()
+                .collect(Collectors.groupingBy(a -> a.getCategory().getTitle()));
+
+        Map<String, List<Article>> sortedGroupedArticles = groupedArticles.entrySet().stream()
+                .sorted((e1, e2) -> Integer.compare(e2.getValue().size(), e1.getValue().size()))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
 
         String today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy"));
 
@@ -111,7 +130,7 @@ public class StatisticService {
                     .append("</div></div>");
 
             html.append("<h2>Articles by Category</h2>");
-            for (Map.Entry<String, List<Article>> entry : groupedArticles.entrySet()) {
+            for (Map.Entry<String, List<Article>> entry : sortedGroupedArticles.entrySet()) {
                 html.append("<div class='category'>")
                         .append(entry.getKey())
                         .append(" (")
@@ -133,7 +152,7 @@ public class StatisticService {
                 }
             }
 
-            Map<String, Integer> categoryChartData = buildTopCategoriesChartData(groupedArticles);
+            Map<String, Integer> categoryChartData = buildTopCategoriesChartData(sortedGroupedArticles);
 
             if (!categoryChartData.isEmpty()) {
 

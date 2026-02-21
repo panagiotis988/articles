@@ -7,6 +7,7 @@ import com.wikipedia.articles.repositories.CategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -60,7 +61,7 @@ public class CategoryService {
      * Creates a new category with the given title.
      * - Validates that the title is not empty.
      * - Checks if a category with the same title (case-insensitive) already exists.
-     *   If it does, throws a 400 BAD_REQUEST with message "Category already exists".
+     * If it does, throws a 400 BAD_REQUEST with message "Category already exists".
      * - If the title is valid and unique, creates and saves a new Category.
      *
      * @param title the name of the category to create
@@ -114,5 +115,40 @@ public class CategoryService {
         }
 
         categoryRepository.delete(category);
+    }
+
+    /**
+     * Updates the title of an existing category.
+     * Validates that:
+     * - The category exists
+     * - The category is not protected
+     * - No other category already uses the same title (case-insensitive)
+     *
+     * @param id       the ID of the category to update
+     * @param newTitle the new title to assign to the category
+     * @return the updated Category entity
+     * @throws ResponseStatusException if:
+     *                                 - the category is not found (404 Not Found)
+     *                                 - the category is protected (400 Bad Request)
+     *                                 - a duplicate title exists (400 Bad Request)
+     */
+    public Category updateCategory(Long id, String newTitle) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+
+        if (category.isProtected()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Protected categories cannot be modified");
+        }
+
+        String normalizedTitle = newTitle.trim();
+
+        boolean exists = categoryRepository.existsByTitleIgnoreCase(normalizedTitle);
+        if (exists && !category.getTitle().equalsIgnoreCase(normalizedTitle)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Category already exists");
+        }
+
+        category.setTitle(normalizedTitle);
+
+        return categoryRepository.save(category);
     }
 }

@@ -1,6 +1,7 @@
 package com.wikipedia.articles.controllers;
 
 import com.wikipedia.articles.dto.CategoryCreateRequest;
+import com.wikipedia.articles.dto.CategoryUpdateRequest;
 import com.wikipedia.articles.models.Category;
 import com.wikipedia.articles.services.CategoryService;
 import jakarta.validation.Valid;
@@ -79,5 +80,20 @@ public class CategoryController {
     public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId) {
         categoryService.deleteCategory(categoryId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Updates the title of an existing category.
+     *
+     * @param id the ID of the category to update
+     * @param request contains the new category title
+     * @return the updated Category object
+     */
+    @PatchMapping("/api/categories/{id}")
+    public Category updateCategory(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoryUpdateRequest request
+    ) {
+        return categoryService.updateCategory(id, request.getTitle());
     }
 }
