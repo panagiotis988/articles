@@ -6,6 +6,7 @@ import com.wikipedia.articles.services.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.wikipedia.articles.dto.CategoryUpdateRequest;
 
 import java.util.List;
 
@@ -55,6 +56,15 @@ public class CategoryController {
         return categoryService.getAllEditableCategories();
     }
 
+    // Nick
+
+    @PutMapping("/api/categories/{id}")
+    public Category updateCategory(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoryUpdateRequest request
+    ) {
+        return categoryService.updateCategory(id, request.getTitle());
+    }
 
     /**
      * Creates a new category if it does not already exist.
@@ -68,7 +78,7 @@ public class CategoryController {
     public Category createCategory(@Valid @RequestBody CategoryCreateRequest request) {
         return categoryService.createCategory(request.getName());
     }
-
+    // End Nick
     /**
      * Deletes a category by ID and reassigns its articles to "Uncategorized".
      *

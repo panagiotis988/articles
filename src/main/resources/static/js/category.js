@@ -97,9 +97,20 @@ function toggleEdit(category, titleDiv, editBtn) {
         */
 
         // Local PATCH
-        category.title = newTitle;
+        //category.title = newTitle;
+        //titleDiv.textContent = category.title;
 
-        titleDiv.textContent = category.title;
+        axios.put(`/api/categories/${category.id}`, {
+            title: newTitle
+        }).then(() => {
+            loadCategories();
+        }).catch(error => {
+            let message = 'Update failed.';
+            if (error.response) {
+                message = error.response.data?.message || message;
+            }
+            showErrorModal(message);
+        });
 
         editBtn.textContent = 'Edit';
         editBtn.classList.remove('save');

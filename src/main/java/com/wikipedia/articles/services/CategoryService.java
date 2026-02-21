@@ -94,6 +94,33 @@ public class CategoryService {
      *
      * @param categoryId category ID to delete
      */
+    // Nick
+    public Category updateCategory(Long id, String newTitle) {
+
+        if (!StringUtils.hasText(newTitle)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Category name is required");
+        }
+
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+
+        if (category.isProtected()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Protected categories cannot be modified");
+        }
+
+        String normalizedTitle = newTitle.trim();
+
+        boolean exists = categoryRepository.existsByTitleIgnoreCase(normalizedTitle);
+        if (exists && !category.getTitle().equalsIgnoreCase(normalizedTitle)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Category already exists");
+        }
+
+        category.setTitle(normalizedTitle);
+
+        return categoryRepository.save(category);
+    }
+    // END Nick
+
     public void deleteCategory(Long categoryId) {
         Category uncategorized = categoryRepository.findByTitle("Uncategorized")
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Uncategorized category not found"));
