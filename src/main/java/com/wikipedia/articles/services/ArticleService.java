@@ -273,7 +273,6 @@ public class ArticleService {
     /**
      * Retrieves articles for a user filtered by search text and category.
      */
-
     public Map<String, List<Article>> myArticles(String search, Long categoryId) {
         boolean hasSearch =
                 search != null && !search.trim().isEmpty();
@@ -293,7 +292,6 @@ public class ArticleService {
         }
         Map<String, List<Article>> groupedArticles =
                 articles.stream().collect(Collectors.groupingBy(a -> a.getCategory().getTitle()));
-
 
         return groupedArticles;
     }
