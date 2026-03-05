@@ -60,12 +60,10 @@ public class ArticleService {
      * @return map with paginated search results
      */
     public Map<String, Object> searchWikipedia(String search, int page, int size) {
-        System.out.println("to search einai  is   " + search);
 
         try {
             int offset = (page - 1) * size;
             String url = buildWikiUrl(search, size, offset);
-            System.out.println(url);
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "MyWikipediaApp/1.0");
 
@@ -77,7 +75,6 @@ public class ArticleService {
             });
             Map<String, Object> queryMap = asMap(responseMap.get("query"));
             List<Map<String, Object>> results = asListOfMap(queryMap.get("search"));
-            System.out.println(" first results is   " + results);
 
             results.forEach(this::cleanSnippet);
 
@@ -94,16 +91,6 @@ public class ArticleService {
             finalResponse.put("totalHits", totalHits);
             finalResponse.put("totalPages", (int) Math.ceil((double) totalHits / size));
             finalResponse.put("results", results);
-
-            System.out.println("url is   " + url);
-            System.out.println("headers is   " + headers);
-            System.out.println("response is   " + response);
-            System.out.println("responseMap is   " + responseMap);
-            System.out.println("queryMap is   " + queryMap);
-            System.out.println("totalHits is   " + totalHits);
-            System.out.println("response.getBody()   " + response.getBody());
-            System.out.println("finalResponse is   " + finalResponse);
-            System.out.println("results is   " + results);
 
             addArticleDetails(results);
 
@@ -159,7 +146,6 @@ public class ArticleService {
      */
     private void addArticleDetails(List<Map<String, Object>> results) {
         List<Article> savedArticles = savedPageIds(results);
-        System.out.println("savedArticles is   " + savedArticles);
 
         Map<Integer, Article> savedByPageId = new HashMap<>();
         for (Article a : savedArticles) {
@@ -282,7 +268,6 @@ public class ArticleService {
 
         if ((hasSearch && hasCategoryId)) {
             articles = articleRepository.findByCategoryIdAndTitleContainingIgnoreCaseOrCategoryIdAndSnippetContainingIgnoreCase(categoryId, search, categoryId, search);
-            System.out.println(articleRepository.findByCategoryIdAndTitleContainingIgnoreCaseOrCategoryIdAndSnippetContainingIgnoreCase(categoryId, search, categoryId, search));
         } else if (!hasSearch && hasCategoryId) {
             articles = articleRepository.findByCategoryId(categoryId);
         } else if (hasSearch && !hasCategoryId) {
